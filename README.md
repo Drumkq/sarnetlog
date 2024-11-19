@@ -6,7 +6,7 @@
 # 💉 How to use it?
 You will need the steam version of the game and unbanned account before you can use it
 
-1. Unpack the injector.exe and logger.dll in the same folder
+1. Unpack the injector.exe and logger.dll into the same folder
 2. Start the injector.exe
 3. Start the game
 
