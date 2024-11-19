@@ -1,4 +1,4 @@
-# ⚠️ Disclamer
+# ⚠️ Caution
 **Tested on Windows 10, Steam version**
 
 **Made for educational purposes**
