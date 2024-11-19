@@ -22,7 +22,7 @@ Once you have done these steps, all information about outgoing requests will be 
 
 Download this repository or clone it using git:
 ```git
-git clone https://github.com/Drumkq/sarnetlog.git .
+git clone https://github.com/Drumkq/sarnetlog.git sarnetlog/
 ```
 Open terminal in `sarnetlog` folder and type this command:
 ```
