@@ -3,6 +3,7 @@ use std::{
     sync::atomic::{AtomicBool, Ordering},
 };
 
+use utils::terminal;
 use windows::Win32::{
     Foundation::{CloseHandle, HMODULE},
     System::{
@@ -21,11 +22,13 @@ pub static EXIT_REQUESTED: AtomicBool = AtomicBool::new(false);
 
 #[no_mangle]
 pub unsafe extern "system" fn entry(dll_module: *mut c_void) -> u32 {
+    terminal::init();
     hooks::load();
 
     while !EXIT_REQUESTED.load(Ordering::Relaxed) {}
 
     hooks::unload();
+    terminal::destroy();
 
     FreeLibraryAndExitThread(std::mem::transmute::<*mut c_void, HMODULE>(dll_module), 0);
 }

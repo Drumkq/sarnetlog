@@ -2,7 +2,7 @@ use std::{ffi::c_void, ptr::null};
 
 use crate::mono::MonoString;
 
-type MonoStringCreate = fn(*const c_void, *const u16, *const c_void) -> MonoString;
+type MonoStringCreate = fn(*const c_void, *const u16, *const c_void) -> *const MonoString;
 static mut MONO_STRING_CREATE_FN: Option<MonoStringCreate> = None;
 
 /// # Safety:
@@ -13,6 +13,6 @@ pub(super) fn init(addr: *const c_void) {
     };
 }
 
-pub fn invoke(ptr: *const u16) -> MonoString {
+pub fn invoke(ptr: *const u16) -> *const MonoString {
     unsafe { (MONO_STRING_CREATE_FN.unwrap())(null(), ptr, null()) }
 }

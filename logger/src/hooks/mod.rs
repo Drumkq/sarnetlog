@@ -11,6 +11,8 @@ pub unsafe fn load() {
 
     monostring_create::init(scanner.find(MONOSTRING_CREATE).unwrap());
     json_serialize::hook(scanner.find(JSON_SERIALIZE).unwrap().cast_mut());
+
+    minhook::MinHook::enable_all_hooks().unwrap();
 }
 
 pub fn unload() {}
