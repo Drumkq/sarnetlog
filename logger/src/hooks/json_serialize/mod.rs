@@ -24,7 +24,12 @@ fn serialize_object_hook(
 
     let js: serde_json::Value = serde_json::from_str(s.as_str()).unwrap();
     let pretty_output = serde_json::to_string_pretty(&js).unwrap();
-    println!("{}: {}", "[outgoing\tjson]".bright_black().bold(), pretty_output.bright_yellow().bold());
+
+    println!(
+        "{}: {}",
+        "[outgoing json]".bright_black().bold(),
+        pretty_output.bright_yellow().bold()
+    );
 
     res
 }
