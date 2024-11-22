@@ -1,11 +1,12 @@
-use std::ffi::c_void;
+use std::{ffi::c_void, sync::atomic::{AtomicI64, Ordering}};
 
 use colored::Colorize;
 
-use crate::mono::MonoString;
+use crate::{mono::MonoString, utils::filesystem::{write_to_file, OUTPUT_JSONS_FILE_NAME}};
 
 type JsonSerializeObject<'a> = fn(*const c_void, *const c_void, *const c_void) -> &'a MonoString;
 static mut JSON_SERIALIZE_OBJECT_FN: Option<JsonSerializeObject> = None;
+static SERIALIZATION_I: AtomicI64 = AtomicI64::new(1);
 
 pub(super) unsafe fn hook(target: *mut c_void) {
     JSON_SERIALIZE_OBJECT_FN = Some(std::mem::transmute(
@@ -30,6 +31,11 @@ fn serialize_object_hook(
         "[outgoing json]".bright_black().bold(),
         pretty_output.bright_yellow().bold()
     );
+
+    let formatted = format!("Iteration {}\n{}", SERIALIZATION_I.load(Ordering::Relaxed), pretty_output);
+    write_to_file(OUTPUT_JSONS_FILE_NAME, &formatted);
+
+    SERIALIZATION_I.store(SERIALIZATION_I.load(Ordering::Relaxed) + 1, Ordering::Relaxed);
 
     res
 }

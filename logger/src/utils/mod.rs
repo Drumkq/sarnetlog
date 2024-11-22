@@ -1,3 +1,4 @@
+pub mod filesystem;
 mod module_info;
 pub mod terminal;
 
