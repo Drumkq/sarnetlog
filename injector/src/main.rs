@@ -1,10 +1,12 @@
 use std::{
-    env::current_dir, process::exit, ptr::{null, null_mut}
+    env::current_dir,
+    process::exit,
+    ptr::{null, null_mut},
 };
 
 use colored::Colorize;
 use windows::{
-    core::{PCSTR, PCWSTR},
+    core::PCSTR,
     Win32::{
         Foundation::CloseHandle,
         System::{
@@ -15,7 +17,7 @@ use windows::{
                     TH32CS_SNAPPROCESS,
                 },
             },
-            LibraryLoader::{GetModuleHandleW, GetProcAddress},
+            LibraryLoader::{GetModuleHandleA, GetProcAddress},
             Memory::{VirtualAllocEx, MEM_COMMIT, MEM_RESERVE, PAGE_EXECUTE_READWRITE},
             Threading::{CreateRemoteThread, OpenProcess, PROCESS_ALL_ACCESS},
         },
@@ -24,6 +26,9 @@ use windows::{
 
 fn find_game_process() -> u32 {
     unsafe {
+        // Safe:
+        // Fails only if the specified process is a 64-bit process and the
+        // caller is a 32-bit process
         let snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0).unwrap();
 
         let mut process_entry: PROCESSENTRY32W = Default::default();
@@ -42,7 +47,7 @@ fn find_game_process() -> u32 {
 
             let process_name = String::from_utf16_lossy(&exe_name);
             if process_name == "Super Animal Royale.exe\0" {
-                CloseHandle(snapshot).unwrap();
+                CloseHandle(snapshot).unwrap(); // Safe. The handle is open, so we can close it safely
 
                 return process_entry.th32ProcessID;
             }
@@ -50,7 +55,7 @@ fn find_game_process() -> u32 {
             proc = Process32NextW(snapshot, &mut process_entry);
         }
 
-        CloseHandle(snapshot).unwrap();
+        CloseHandle(snapshot).unwrap(); // Safe. The handle is open, so we can close it safely
 
         0
     }
@@ -64,10 +69,18 @@ fn main() {
         "[info]".bright_black(),
         "looking up for the process".bright_black().bold()
     );
-    let mut pid: u32 = 0;
-    while pid == 0 {
-        pid = find_game_process();
-    }
+
+    // Ugly contruction, but I don't know
+    // how to better implement getting the process pid
+    let pid = (|| -> u32 {
+        let mut pid = 0;
+        while pid == 0 {
+            pid = find_game_process();
+        }
+
+        pid
+    })();
+
     println!(
         "{} {} {}",
         "[info]".bright_black(),
@@ -75,29 +88,36 @@ fn main() {
         pid
     );
 
-    let process_handle = unsafe { OpenProcess(PROCESS_ALL_ACCESS, false, pid).unwrap() };
+    let process_handle = unsafe {
+        let option = OpenProcess(PROCESS_ALL_ACCESS, false, pid);
+        if let Err(e) = option {
+            println!("{}", e.message().red().bold());
+            return;
+        }
+
+        option.unwrap()
+    };
 
     let dll_dir = current_dir().unwrap().join("logger.dll");
     let dll_path = dll_dir.to_str().unwrap();
 
-    if let Err(e) = std::fs::exists(dll_dir.to_path_buf()) {
+    if let Err(_) = std::fs::exists(dll_dir.to_path_buf()) {
         println!(
             "{} {}",
             "[fatal]".bright_black(),
-            e.to_string().red().bold()
+            "put logger.dll and injector in the same directory"
+                .red()
+                .bold()
         );
         exit(-1);
     }
 
     unsafe {
-        let mut kernel32_name = "kernel32".encode_utf16().collect::<Vec<u16>>();
-        kernel32_name.push(0);
+        let kernel32_mod = GetModuleHandleA(PCSTR::from_raw("kernel32.dll".as_ptr()))
+            .expect(&"failed to get kernel32.dll".red().bold());
+        let load_lib = GetProcAddress(kernel32_mod, PCSTR::from_raw("LoadLibraryA\0".as_ptr()))
+            .expect(&"failed to get LoadLibraryA".red().bold());
 
-        let load_lib_symbol = "LoadLibraryA\0".as_bytes();
-
-        let kernel32_mod = GetModuleHandleW(PCWSTR::from_raw(kernel32_name.as_ptr())).unwrap();
-        let load_lib =
-            GetProcAddress(kernel32_mod, PCSTR::from_raw(load_lib_symbol.as_ptr())).unwrap();
         let stub = VirtualAllocEx(
             process_handle,
             Some(null()),
@@ -112,7 +132,7 @@ fn main() {
             dll_path.len(),
             Some(null_mut()),
         )
-        .unwrap();
+        .expect(&"failed to write process memory".red().bold());
         CreateRemoteThread(
             process_handle,
             Some(null()),
@@ -122,8 +142,9 @@ fn main() {
             0,
             Some(null_mut()),
         )
-        .unwrap();
+        .expect(&"failed to create remote thread".red().bold());
 
+        // Safe
         CloseHandle(process_handle).unwrap();
     }
 

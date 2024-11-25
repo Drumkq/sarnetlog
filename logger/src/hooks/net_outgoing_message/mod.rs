@@ -7,7 +7,6 @@ type NetOutgoingMessageToString<'a> =
 static mut NET_OUTGOING_MESSAGE_TO_STRING_FN: Option<NetOutgoingMessageToString> = None;
 
 pub(super) unsafe fn hook(target: *const c_void) {
-    println!("{:p}", target);
     NET_OUTGOING_MESSAGE_TO_STRING_FN = Some(std::mem::transmute(target));
 }
 
