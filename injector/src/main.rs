@@ -38,7 +38,7 @@ fn find_game_process() -> u32 {
                 .skip_while(|&byte| byte == 0)
                 .collect::<Vec<u16>>();
             exe_name.reverse();
-            exe_name.push(b'\0'.into());
+            exe_name.push(0);
 
             let process_name = String::from_utf16_lossy(&exe_name);
             if process_name == "Super Animal Royale.exe\0" {

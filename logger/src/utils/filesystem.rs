@@ -8,6 +8,7 @@ use std::{
 use chrono::Utc;
 
 pub const OUTPUT_JSONS_FILE_NAME: &str = "output_jsons.txt";
+pub const OUTPUT_WS_FILE_NAME: &str = "output_lidgren.txt";
 
 pub fn get_logs_path() -> PathBuf {
     let current_dir = current_dir()
@@ -22,6 +23,7 @@ pub fn init_files() {
     let current_dir = get_logs_path();
 
     let _ = File::create(current_dir.clone().join(OUTPUT_JSONS_FILE_NAME));
+    let _ = File::create(current_dir.clone().join(OUTPUT_WS_FILE_NAME));
 }
 
 pub fn write_to_file(path: &str, s: &str) {

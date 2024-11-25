@@ -1,8 +1,14 @@
-use std::{ffi::c_void, sync::atomic::{AtomicI64, Ordering}};
+use std::{
+    ffi::c_void,
+    sync::atomic::{AtomicI64, Ordering},
+};
 
 use colored::Colorize;
 
-use crate::{mono::MonoString, utils::filesystem::{write_to_file, OUTPUT_JSONS_FILE_NAME}};
+use crate::{
+    mono::MonoString,
+    utils::filesystem::{write_to_file, OUTPUT_JSONS_FILE_NAME},
+};
 
 type JsonSerializeObject<'a> = fn(*const c_void, *const c_void, *const c_void) -> &'a MonoString;
 static mut JSON_SERIALIZE_OBJECT_FN: Option<JsonSerializeObject> = None;
@@ -32,10 +38,17 @@ fn serialize_object_hook(
         pretty_output.bright_yellow().bold()
     );
 
-    let formatted = format!("Iteration {}\n{}", SERIALIZATION_I.load(Ordering::Relaxed), pretty_output);
+    let formatted = format!(
+        "Iteration {}\n{}",
+        SERIALIZATION_I.load(Ordering::Relaxed),
+        pretty_output
+    );
     write_to_file(OUTPUT_JSONS_FILE_NAME, &formatted);
 
-    SERIALIZATION_I.store(SERIALIZATION_I.load(Ordering::Relaxed) + 1, Ordering::Relaxed);
+    SERIALIZATION_I.store(
+        SERIALIZATION_I.load(Ordering::Relaxed) + 1,
+        Ordering::Relaxed,
+    );
 
     res
 }

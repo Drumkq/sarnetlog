@@ -28,7 +28,7 @@ You will need the **steam** version of the game and **unbanned** account before 
 * ✅ Logging to the console
 * ✅ Outgoing HTTP requests logging
 * ❌ Incoming HTTP requests logging
-* ❌ WebSockets outgoing stream logging
+* ✅ WebSockets outgoing stream logging
 * ❌ WebSockets incoming stream logging
 
 # 🛠️ Compilation guide
