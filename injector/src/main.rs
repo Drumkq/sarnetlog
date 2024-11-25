@@ -1,12 +1,10 @@
 use std::{
-    env::current_dir,
-    process::exit,
-    ptr::{null, null_mut},
+    env::current_dir, ffi::CString, process::exit, ptr::{null, null_mut}
 };
 
 use colored::Colorize;
 use windows::{
-    core::PCSTR,
+    core::{PCSTR, PCWSTR},
     Win32::{
         Foundation::CloseHandle,
         System::{
@@ -17,7 +15,7 @@ use windows::{
                     TH32CS_SNAPPROCESS,
                 },
             },
-            LibraryLoader::{GetModuleHandleA, GetProcAddress},
+            LibraryLoader::{GetModuleHandleA, GetModuleHandleW, GetProcAddress},
             Memory::{VirtualAllocEx, MEM_COMMIT, MEM_RESERVE, PAGE_EXECUTE_READWRITE},
             Threading::{CreateRemoteThread, OpenProcess, PROCESS_ALL_ACCESS},
         },
@@ -113,8 +111,8 @@ fn main() {
     }
 
     unsafe {
-        let kernel32_mod = GetModuleHandleA(PCSTR::from_raw("kernel32.dll".as_ptr()))
-            .expect(&"failed to get kernel32.dll".red().bold());
+        let kernel32_mod = GetModuleHandleA(PCSTR::from_raw("kernel32\0".as_ptr()))
+        .expect(&"failed to get kernel32.dll".red().bold());
         let load_lib = GetProcAddress(kernel32_mod, PCSTR::from_raw("LoadLibraryA\0".as_ptr()))
             .expect(&"failed to get LoadLibraryA".red().bold());
 
