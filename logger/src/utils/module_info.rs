@@ -18,7 +18,7 @@ pub struct ModuleInfo {
 impl ModuleInfo {
     /// # Safety
     /// Safe, but if the module name is correct
-    pub fn new(module: &str) -> Self {
+    pub fn new(module: &str) -> Option<ModuleInfo> {
         let module_str = module
             .encode_utf16()
             .chain([0u16])
@@ -29,8 +29,9 @@ impl ModuleInfo {
         let mut mi = MODULEINFO::default();
 
         unsafe {
-            GetModuleInformation(GetCurrentProcess(), hmod, &mut mi, size_of_val(&mi) as u32)
-                .unwrap()
+            if let Err(_) = GetModuleInformation(GetCurrentProcess(), hmod, &mut mi, size_of_val(&mi) as u32) {
+                return None;
+            }
         };
 
         let MODULEINFO {
@@ -39,10 +40,10 @@ impl ModuleInfo {
             lpBaseOfDll,
         } = mi;
 
-        ModuleInfo {
+        Some(ModuleInfo {
             base: lpBaseOfDll,
             entry: EntryPoint,
             size: SizeOfImage as usize,
-        }
+        })
     }
 }

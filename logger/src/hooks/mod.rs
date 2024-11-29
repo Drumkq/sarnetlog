@@ -16,7 +16,15 @@ pub mod monostring_create;
 pub mod net_outgoing_message;
 
 pub unsafe fn load() {
-    let mi = ModuleInfo::new("GameAssembly.dll");
+    let mi = {
+        let mut mi: Option<_> = None;
+        while mi.is_none() {
+            mi = ModuleInfo::new("GameAssembly.dll");
+        }
+
+        mi.unwrap()
+    };
+    
     let scanner = Scanner::new(mi);
 
     monostring_create::hook(scanner.find(MONOSTRING_CREATE).unwrap());
